@@ -1,5 +1,6 @@
-streamlit 
+streamlit
 pandas 
 matplotlib 
+numpy
 seaborn 
 contextily
