@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import contextily as ctx
 from glob import glob
+import os
 
 # Set page config
 st.set_page_config(
@@ -18,7 +19,11 @@ st.title("🚕 Uber Ride Analysis - NYC 2014 (Apr-Sep)")
 @st.cache_data
 def load_and_preprocess_data():
     # Load all CSV files from your folder
-    data_files = glob('Uber-dataset/uber-raw-data-*.csv/uber-raw-data-*.csv')
+    # data_files = glob('Uber-dataset/uber-raw-data-*.csv/uber-raw-data-*.csv')
+    # With this (more robust path handling):
+
+    DATA_DIR = os.path.join(os.path.dirname(__file__), "Uber-dataset")
+    data_files = glob(os.path.join(DATA_DIR, "uber-raw-data-*.csv", "uber-raw-data-*.csv"))
     
     # Read and concatenate all files
     dfs = []
