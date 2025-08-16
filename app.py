@@ -37,10 +37,15 @@ def load_and_preprocess_data():
     dt = data['Date/Time'].dt
     data['day'] = dt.day
     data['month'] = dt.month_name().astype('category')
+    data['dayofweek'] = dt.day_name().astype('category')
     data['hour'] = dt.hour
     
     data['month'] = data['month'].cat.set_categories(
         ['April', 'May', 'June', 'July', 'August', 'September'], ordered=True)
+    
+    data['dayofweek'] = data['dayofweek'].cat.set_categories(
+        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+        ordered=True)
     
     return data
 
@@ -53,7 +58,6 @@ def get_filtered_data(data, selected_month, selected_base, selected_hour):
         (data['hour'] <= selected_hour[1])
     ]
 
-# Modified plotting function without caching
 def create_geographic_plot(data, title, color=None, legend=None):
     fig, ax = plt.subplots(figsize=(10, 8))
     
@@ -136,9 +140,96 @@ with tab1:
         
         st.pyplot(fig, use_container_width=True)
 
-# [Rest of your tabs remain unchanged]
+with tab2:
+    st.header("Temporal Ride Patterns")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Hourly Distribution")
+        hour_data = filtered_data.groupby('hour').size().reset_index(name='Total')
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.barplot(x='hour', y='Total', data=hour_data, color='steelblue')
+        plt.title('Trips by Hour')
+        st.pyplot(fig, use_container_width=True)
+        
+        st.subheader("Daily Distribution")
+        day_data = filtered_data.groupby('day').size().reset_index(name='Total')
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.lineplot(x='day', y='Total', data=day_data, marker='o')
+        plt.title('Trips by Day of Month')
+        st.pyplot(fig, use_container_width=True)
+    
+    with col2:
+        st.subheader("Day of Week Distribution")
+        dow_data = filtered_data.groupby('dayofweek', observed=True).size().reset_index(name='Total')
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.barplot(x='dayofweek', y='Total', data=dow_data, 
+                   order=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'])
+        plt.title('Trips by Day of Week')
+        st.pyplot(fig, use_container_width=True)
+        
+        st.subheader("Monthly Distribution")
+        month_data = filtered_data.groupby('month', observed=True).size().reset_index(name='Total')
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.barplot(x='month', y='Total', data=month_data,
+                   order=['April','May','June','July','August','September'])
+        plt.title('Trips by Month')
+        st.pyplot(fig, use_container_width=True)
 
-# Metrics
+with tab3:
+    st.header("Base-Specific Analysis")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Trips by Base")
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.countplot(x='Base', data=filtered_data, palette='viridis')
+        plt.title('Trip Count by Base')
+        st.pyplot(fig, use_container_width=True)
+        
+        st.subheader("Hourly Pattern by Base")
+        base_hour = filtered_data.groupby(['Base', 'hour'], observed=True).size().reset_index(name='Total')
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.lineplot(x='hour', y='Total', hue='Base', data=base_hour, marker='o')
+        plt.title('Hourly Pattern by Base')
+        st.pyplot(fig, use_container_width=True)
+    
+    with col2:
+        st.subheader("Day of Week by Base")
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.countplot(x='Base', hue='dayofweek', data=filtered_data, 
+                     hue_order=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'])
+        plt.title('Day of Week Distribution by Base')
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+        st.pyplot(fig, use_container_width=True)
+        
+        st.subheader("Monthly Trend by Base")
+        base_month = filtered_data.groupby(['Base', 'month'], observed=True).size().reset_index(name='Total')
+        base_month['month'] = pd.Categorical(base_month['month'], 
+                                           categories=['April','May','June','July','August','September'],
+                                           ordered=True)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.lineplot(x='month', y='Total', hue='Base', data=base_month, marker='o')
+        plt.title('Monthly Trend by Base')
+        st.pyplot(fig, use_container_width=True)
+
+with tab4:
+    st.header("Raw Data Preview")
+    st.dataframe(filtered_data.head(1000))
+    
+    # Download button
+    csv = filtered_data.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        "Download Filtered Data as CSV",
+        csv,
+        "uber_data_filtered.csv",
+        "text/csv",
+        key='download-csv'
+    )
+
+# Metrics in sidebar
 st.sidebar.header("Key Metrics")
 st.sidebar.metric("Total Rides", len(filtered_data))
 st.sidebar.metric("Unique Days", filtered_data['day'].nunique())
