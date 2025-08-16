@@ -1,6 +1,6 @@
-streamlit
-pandas 
-matplotlib 
-numpy
-seaborn 
-contextily
+streamlit==1.48.1
+pandas==2.3.1
+numpy==1.26.4  # Downgrade to a compatible version
+matplotlib==3.10.5
+seaborn==0.13.2
+contextily==1.6.2
