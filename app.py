@@ -31,8 +31,8 @@ def load_and_preprocess_data():
         df = pd.read_csv(file)
         dfs.append(df)
     
-    data = pd.concat(dfs, ignore_index=True)
-    
+    # data = pd.concat(dfs, ignore_index=True)
+    data = pd.concat(dfs, ignore_index=True).sample(frac=0.4)
     # Convert Date/Time to datetime
     data['Date/Time'] = pd.to_datetime(data['Date/Time'], format='%m/%d/%Y %H:%M:%S')
     
